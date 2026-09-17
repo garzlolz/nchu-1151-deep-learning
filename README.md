@@ -1,20 +1,20 @@
 # 開發環境建置指南
 
-本專案採用 Python 虛擬環境（venv）進行套件隔離，並配置支援 NVIDIA RTX 50 系列（Blackwell 架構）之 PyTorch 與 CUDA 13.2 執行環境。
+本專案使用 Python 虛擬環境（venv）隔離套件，並配置支援 NVIDIA RTX 50 系列（Blackwell 架構）的 PyTorch 與 CUDA 13.2 環境。
 
 ---
 
-## 1. 系統相依需求
+## 1. 系統需求
 
 - 作業系統：Windows 11 / 10、Linux 或 macOS
 - Python 版本：Python 3.10 以上
-- GPU 支援：NVIDIA GeForce RTX 50 系列（需安裝支援 CUDA 13.2+ 之最新版 NVIDIA 驅動程式）
+- GPU 支援：NVIDIA GeForce RTX 50 系列（需安裝支援 CUDA 13.2+ 的最新版 NVIDIA 驅動程式）
 
 ---
 
 ## 2. 建立與啟動虛擬環境
 
-請於專案根目錄執行以下指令建立 `.venv` 虛擬環境：
+在專案根目錄執行以下指令建立 `.venv` 虛擬環境：
 
 ```bash
 # 建立虛擬環境
@@ -44,7 +44,7 @@ source .venv/bin/activate
 
 ```
 
-> 啟動成功後，終端機提示字元前方將顯示 `(.venv)` 標記。
+> 啟動成功後，終端機提示字元前會出現 `(.venv)` 標記。
 
 ---
 
@@ -52,7 +52,7 @@ source .venv/bin/activate
 
 在安裝任何相依套件前，必須先將 `pip` 升級至最新版本。
 
-在 Windows 系統中，請務必使用 `python -m pip` 指令執行升級，以避免執行中的 `pip.exe` 檔案被系統鎖定導致更新失敗：
+在 Windows 系統中，請務必使用 `python -m pip` 升級，避免執行中的 `pip.exe` 被系統鎖定而更新失敗：
 
 ```bash
 python -m pip install --upgrade pip
@@ -63,7 +63,7 @@ python -m pip install --upgrade pip
 
 ## 4. 安裝專案相依套件
 
-專案所需的相依套件已記錄於 `requirements.txt`。該檔案開頭已指定 PyTorch CUDA 13.2 的官方來源索引：
+專案相依套件記錄在 `requirements.txt`，檔頭已指定 PyTorch CUDA 13.2 的官方來源索引：
 
 ```bash
 python -m pip install -r requirements.txt
@@ -74,7 +74,7 @@ python -m pip install -r requirements.txt
 
 ## 5. 註冊 Jupyter Kernel
 
-為使 VS Code 或 JupyterLab 能正確識別並掛載虛擬環境，需將環境註冊至系統清單：
+為了讓 VS Code 或 JupyterLab 能正確辨識並使用這個虛擬環境，需將環境註冊至 Jupyter 核心清單：
 
 ```bash
 python -m ipykernel install --user --name nchu_dl --display-name "Python (nchu-dl)"
@@ -83,10 +83,10 @@ python -m ipykernel install --user --name nchu_dl --display-name "Python (nchu-d
 
 ### VS Code 設定步驟
 
-1. 於 VS Code 中開啟專案內的 `.ipynb` 筆記本檔案。
+1. 在 VS Code 中開啟專案內的 `.ipynb` 筆記本。
 2. 點選視窗右上角的「選取核心（Select Kernel）」。
 3. 選擇「Jupyter Kernel...」，並選取清單中的 `Python (nchu-dl)`。
-4. 若清單未出現，請選擇「Python Environments...」並手動指定路徑至專案目錄下的 `.venv/Scripts/python.exe`。
+4. 如果清單沒出現，請選「Python Environments...」，並手動指向專案目錄下的 `.venv/Scripts/python.exe`。
 
 ---
 
@@ -99,24 +99,10 @@ python -c "import sys, torch; print('Python 直譯器:', sys.executable); print(
 
 ```
 
-預期正確輸出指標：
+預期輸出結果：
 
 - 直譯器路徑必須包含 `.venv`。
-- `CUDA 可用性` 需為 `True`。
+- `CUDA 可用性` 應為 `True`。
 - `算力架構` 若為 RTX 50 系列，需顯示為 `(12, 0)`。
 
 ---
-
-## 7. 版本控制注意事項
-
-實體虛擬環境目錄（`.venv/`）包含平台專屬二進位執行檔且體積龐大，**嚴禁提交至 Git 儲存庫**。
-
-請確認專案根目錄的 `.gitignore` 檔案已包含以下設定：
-
-```gitignore
-.venv/
-__pycache__/
-*.pyc
-.ipynb_checkpoints/
-
-```
