@@ -111,6 +111,14 @@ python -c "import sys, torch; print('Python 直譯器:', sys.executable); print(
 
 `.ipynb` 檔案本身是 JSON，每次執行 cell 都會更動 `execution_count`（執行次數編號），即使程式碼完全沒改也會觸發無意義的 git diff，長期下來會讓 code review 和合併變得困難。本專案使用 `nbstripout`（已列於 `requirements.txt`）在 commit 時自動清除 `execution_count`，但保留每個 cell 的 output（分析結果、圖表等），確保實驗結果不會遺失。
 
+### 7.0
+
+直接清空 .ipynb 執行次數
+
+```bash
+nbstripout src/*.ipynb --keep-output
+```
+
 ### 7.1 註冊 git filter
 
 在專案根目錄執行，`--keep-output` 代表只清 `execution_count`，不清空 output：
