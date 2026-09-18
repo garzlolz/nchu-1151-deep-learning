@@ -106,3 +106,87 @@ python -c "import sys, torch; print('Python 直譯器:', sys.executable); print(
 - `算力架構` 若為 RTX 50 系列，需顯示為 `(12, 0)`。
 
 ---
+
+## 7. Jupyter Notebook 版本控制設定（nbstripout）
+
+`.ipynb` 檔案本身是 JSON，每次執行 cell 都會更動 `execution_count`（執行次數編號），即使程式碼完全沒改也會觸發無意義的 git diff，長期下來會讓 code review 和合併變得困難。本專案使用 `nbstripout`（已列於 `requirements.txt`）在 commit 時自動清除 `execution_count`，但保留每個 cell 的 output（分析結果、圖表等），確保實驗結果不會遺失。
+
+### 7.1 註冊 git filter
+
+在專案根目錄執行，`--keep-output` 代表只清 `execution_count`，不清空 output：
+
+```bash
+nbstripout --install --keep-output --attributes .gitattributes
+```
+
+執行後 `.gitattributes` 應包含以下內容：
+
+```
+*.ipynb filter=nbstripout
+*.ipynb diff=ipynb
+```
+
+### 7.2 確認設定是否正確帶入 --keep-output
+
+`nbstripout --install` 在某些版本下不會把 `--keep-output` 參數寫進 git config，導致 output 仍被清空。安裝完務必檢查：
+
+```bash
+git config --get filter.nbstripout.clean
+```
+
+若輸出結尾**沒有**出現 `--keep-output`，需手動補上（將路徑換成本機的 `.venv` 位置）：
+
+```bash
+git config filter.nbstripout.clean '"D:/path/to/.venv/Scripts/python.exe" -m nbstripout --keep-output'
+git config diff.ipynb.textconv '"D:/path/to/.venv/Scripts/python.exe" -m nbstripout -t --keep-output'
+```
+
+### 7.3 對已存在的 notebook 套用設定（renormalize）
+
+若專案裡已有先前 commit 過的 notebook，需要重新套用 filter，讓舊的 `execution_count` 一併從 git 歷史清除：
+
+```bash
+git add --renormalize .
+git status
+```
+
+若 `git status` 顯示 `nothing to commit`，代表本機檔案目前沒有 output 內容（可能之前被舊設定清空過）。此時需要重新執行 notebook 產生 output、存檔後再次 `git add .`，才會有內容被保留進 commit。
+
+### 7.4 驗證 output 是否確實保留
+
+```bash
+git show :path/to/notebook.ipynb | grep -A5 '"outputs"'
+```
+
+若看到實際內容（而非空陣列 `[]`），代表設定正確，可以放心 commit。
+
+### 7.5 如何把 execution_count 加回來（還原設定）
+
+若之後不想再清除 `execution_count`（例如想追蹤 cell 實際執行順序），有兩種做法：
+
+**做法一：完全移除 filter**（notebook 恢復原始行為，execution_count 與 output 都正常保留）：
+
+```bash
+nbstripout --uninstall
+```
+
+執行後會清除 `git config` 裡 `filter.nbstripout.*` 與 `diff.ipynb.*` 的設定。`.gitattributes` 裡的 `*.ipynb filter=nbstripout` 這幾行需自行刪除，否則 git 找不到對應 filter 會報錯。
+
+**做法二：改用 --keep-count，只清 output、保留 execution_count**：
+
+```bash
+nbstripout --uninstall
+nbstripout --install --keep-count --attributes .gitattributes
+```
+
+同樣要用 7.2 的方式檢查 `--keep-count` 有沒有被正確寫進 `git config`。
+
+不管用哪種做法，改完設定後都要針對既有 notebook 重新套用一次，才能讓已經 commit 的檔案跟上新規則：
+
+```bash
+git add --renormalize .
+git status
+git commit -m "chore: restore execution_count in notebooks"
+```
+
+> 注意：新 clone 這個 repo 的人，需要各自在自己的環境重新執行第 7.1 步驟，`nbstripout --install`／`--uninstall` 是寫入本機 `.git/config`，不會隨 repo 一起同步給其他協作者。
