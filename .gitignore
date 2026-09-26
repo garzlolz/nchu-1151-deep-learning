@@ -1,3 +1,2 @@
 .venv/
-src/data/
-src/Chapter3/data/MNIST/*
+src/*/data/
